@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>仲介手数料 計算ツール｜売買価格×3%＋6万円＋消費税の上限と、800万円以下の空き家の特例</title>
+<meta name="description" content="不動産の売買価格を入れるだけで、仲介手数料の上限（200万円以下5%、400万円以下4%、400万円超3%＋6万円、＋消費税）を計算。2024年7月からの800万円以下の物件の特例（上限30万円＋税）や、賃貸の仲介手数料にも対応した無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/chukai/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>仲介手数料 計算ツール</h1>
+  <p class="lead">不動産を売る・買うときに不動産会社に払う<strong>仲介手数料の上限</strong>を計算します。2024年7月から始まった<strong>800万円以下の物件の特例</strong>にも対応しています。</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label for="price">売買価格（税抜）</label><input type="number" id="price" min="0" value="3000"><div class="hint">万円単位。建物の消費税を除いた価格</div></div>
+      <div class="field"><label for="low">800万円以下の物件の特例</label>
+        <select id="low"><option value="0">使わない（ふつうの計算）</option><option value="1">使う（空き家など、事前に合意がある場合）</option></select></div>
+    </div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>仲介手数料のよくある質問</h2>
+    <h3>「3%＋6万円」とは？</h3>
+    <p>仲介手数料の上限は、本来「200万円以下の部分は5%、200万円超400万円以下の部分は4%、400万円超の部分は3%」と段階的に計算します。400万円を超える物件では、これを簡単に計算できる「売買価格×3%＋6万円」（＋消費税）が使われます。</p>
+    <h3>800万円以下の特例とは？</h3>
+    <p>2024年7月から、800万円以下の物件（空き家など）は、売主・買主それぞれから、上限30万円＋消費税（33万円）まで仲介手数料を受け取れるようになりました。安い物件は手数料が少なく、扱ってもらいにくかったための見直しです。事前に説明を受けて合意する必要があります。</p>
+    <h3>仲介手数料は値引きできる？</h3>
+    <p>法律で決まっているのは上限なので、不動産会社と交渉して下げてもらうことは可能です。ただし、仲介手数料を下げるより、高く売ってくれる会社を選ぶ方が、手取りは増えやすいです。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>宅地建物取引業法にもとづく報酬額の上限（消費税10%込み）の計算です。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const price = num("price") * MAN;
+  if (!price) { out.innerHTML = '<p class="err">売買価格を入力してください。</p>'; return; }
+  const low = $("low").value === "1";
+  const p1 = Math.min(price, 2000000) * 0.05, p2 = Math.max(0, Math.min(price, 4000000) - 2000000) * 0.04, p3 = Math.max(0, price - 4000000) * 0.03;
+  const normal = Math.floor((p1 + p2 + p3) * 1.1);
+  const fee = chukai(price, low);
+  const levels = [300, 500, 800, 1000, 2000, 3000, 5000, 8000, 10000];
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat warn"><div class="k">仲介手数料の上限（税込）</div><div class="v">${yen(fee)}</div></div>
+      <div class="stat"><div class="k">税抜</div><div class="v">${yen(Math.round(fee / 1.1))}</div></div>
+      <div class="stat"><div class="k">売買価格に対する割合</div><div class="v">${(fee / price * 100).toFixed(2)}%</div></div>
+    </div>
+    <table class="info">
+      <tr><td>200万円以下の部分 × 5%</td><td class="num">${yen(p1)}</td></tr>
+      <tr><td>200万円超400万円以下の部分 × 4%</td><td class="num">${yen(p2)}</td></tr>
+      <tr><td>400万円超の部分 × 3%</td><td class="num">${yen(p3)}</td></tr>
+      <tr><td>合計 ＋ 消費税10%</td><td class="num">${yen(normal)}</td></tr>
+      ${low && price <= 8000000 && fee > normal ? `<tr><td>800万円以下の特例を使った上限</td><td class="num">${yen(fee)}</td></tr>` : ""}
+    </table>
+    <h2 style="margin-top:14px">価格別の仲介手数料（上限・税込）</h2>
+    <table class="info"><tr><th>売買価格</th><th class="num">仲介手数料</th></tr>${levels.map(v => `<tr><td>${v.toLocaleString("ja-JP")}万円</td><td class="num">${yen(chukai(v * MAN))}</td></tr>`).join("")}</table>
+    <p class="note">売るときにかかる費用と税金をすべて引いた手取りは → <a href="/fudosan/baikyaku/">不動産売却 手取り計算</a></p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小規模宅地等の特例 計算ツール｜自宅の土地は330㎡まで80%減額、相続税評価はいくら下がる？</title>
+<meta name="description" content="土地の相続税評価額と面積、使い道（自宅・事業・貸付）を選ぶだけで、小規模宅地等の特例による減額（特定居住用330㎡まで80%、特定事業用400㎡まで80%、貸付事業用200㎡まで50%）を計算。適用の主な要件もわかる無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/shokibo/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>小規模宅地等の特例 計算ツール</h1>
+  <p class="lead">亡くなった人の自宅や事業に使っていた土地は、<strong>相続税の評価額を最大80%下げられる</strong>特例（小規模宅地等の特例）があります。土地の評価額と面積から、<strong>いくら下がるか</strong>を計算します。</p>
+
+  <div class="card">
+    <div class="field"><label for="type">土地の使い道</label>
+      <select id="type"><option value="home">自宅の土地（特定居住用宅地等）</option><option value="biz">お店・事務所など事業用の土地（特定事業用宅地等）</option><option value="rent">アパート・駐車場など貸していた土地（貸付事業用宅地等）</option></select></div>
+    <div class="row">
+      <div class="field"><label for="value">土地の相続税評価額</label><input type="number" id="value" min="0" value="5000"><div class="hint">万円単位（路線価 × 面積などで出した評価額）</div></div>
+      <div class="field"><label for="area">土地の面積</label><input type="number" id="area" min="0" value="200"><div class="hint">㎡</div></div>
+    </div>
+    <div class="field"><label for="who">その土地を相続する人</label>
+      <select id="who"><option value="spouse">配偶者</option><option value="live">同居していた親族</option><option value="house">持ち家のない別居の親族（いわゆる「家なき子」）</option><option value="other">そのほかの親族</option></select></div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>小規模宅地等の特例のよくある質問</h2>
+    <h3>どれくらい安くなる？</h3>
+    <p>自宅の土地なら330㎡まで評価額が80%下がります。評価額5,000万円の土地なら、相続税の計算上は1,000万円として扱われます。事業用は400㎡まで80%、貸付用は200㎡まで50%の減額です。</p>
+    <h3>誰が相続しても使える？</h3>
+    <p>自宅の土地の場合、配偶者が相続すれば無条件で使えます。同居していた親族は、相続税の申告期限まで住み続けて持ち続けることが条件です。別居の親族は、自分や配偶者の持ち家に3年以上住んでいないなど、厳しい条件（いわゆる「家なき子」）を満たす必要があります。</p>
+    <h3>申告は必要？</h3>
+    <p>特例を使って相続税が0円になる場合でも、相続税の申告が必要です。申告をしないと特例は使えません。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>租税特別措置法の小規模宅地等の特例の減額割合・限度面積による計算です。複数の種類の土地を組み合わせる場合の限度面積の調整や、細かい適用要件は含めていません。実際の適用は税理士にご確認ください。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const RULE = { home: [330, 0.8, "特定居住用宅地等"], biz: [400, 0.8, "特定事業用宅地等"], rent: [200, 0.5, "貸付事業用宅地等"] };
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const t = $("type").value, value = num("value") * MAN, area = num("area"), who = $("who").value;
+  if (!value || !area) { out.innerHTML = '<p class="err">評価額と面積を入力してください。</p>'; return; }
+  const [lim, rate, name] = RULE[t];
+  const ok = t !== "home" || who !== "other";
+  const cut = ok ? Math.floor(value * Math.min(1, lim / area) * rate) : 0;
+  const cond = t === "home"
+    ? { spouse: "配偶者は、そのほかの条件なしで使えます。", live: "相続税の申告期限（10か月）まで、その家に住み続けて土地を持ち続けることが条件です。", house: "相続開始前3年以内に、自分・配偶者・3親等内の親族などの持ち家に住んでいないこと、相続した土地を申告期限まで持ち続けることなどが条件です。", other: "同居しておらず、「家なき子」の条件も満たさない親族は、自宅の土地の特例を使えません。" }[who]
+    : t === "biz" ? "亡くなった人の事業を、申告期限までに引き継いで続け、土地を持ち続けることなどが条件です（相続開始前3年以内に事業に使い始めた土地は原則として対象外）。"
+    : "貸付事業を申告期限までに引き継いで続け、土地を持ち続けることなどが条件です（相続開始前3年以内に貸し始めた土地は原則として対象外）。";
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat good"><div class="k">評価額が下がる額</div><div class="v">${man(cut)}</div></div>
+      <div class="stat"><div class="k">特例を使ったあとの評価額</div><div class="v">${man(value - cut)}</div></div>
+      <div class="stat"><div class="k">${name}</div><div class="v">${lim}㎡まで${rate * 100}%減</div></div>
+    </div>
+    <table class="info">
+      <tr><td>特例の対象になる面積</td><td class="num">${Math.min(area, lim)}㎡（全体${area}㎡）</td></tr>
+      <tr><td>計算式</td><td class="num">${man(value)} × ${Math.min(area, lim)}㎡/${area}㎡ × ${rate * 100}%</td></tr>
+    </table>
+    <p class="note"><strong>主な条件：</strong>${cond}</p>
+    <p class="note">この減額を入れて相続税を計算するなら → <a href="/fudosan/">相続税 計算</a>（「小規模宅地等の特例による減額」に ${Math.round(cut / MAN).toLocaleString("ja-JP")} 万円と入力）</p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

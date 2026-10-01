@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>相続登記の費用・期限 計算ツール｜登録免許税（0.4%）と義務化の期限（3年）・過料</title>
+<meta name="description" content="土地・建物の固定資産税評価額を入れるだけで、相続登記の登録免許税（評価額の0.4%）と費用の目安を計算。100万円以下の土地の免税措置や、2024年4月から義務化された相続登記の期限（3年以内）もわかる無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/touki/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>相続登記の費用・期限 計算ツール</h1>
+  <p class="lead">相続した不動産の名義を変える<strong>相続登記</strong>の費用（登録免許税）と、<strong>義務化された申請期限</strong>を計算します。2024年4月から、相続登記をしないと過料（最大10万円）の対象になります。</p>
+
+  <div class="card">
+    <h2>不動産の固定資産税評価額</h2>
+    <p class="hint">毎年届く固定資産税の納税通知書（課税明細書）や、市区町村で取れる評価証明書に書かれています。</p>
+    <div class="row">
+      <div class="field"><label for="lands">土地の評価額（1筆ずつ、カンマ区切り）</label><input type="text" id="lands" value="12000000, 800000"><div class="hint">円単位。例：12000000, 800000</div></div>
+      <div class="field"><label for="building">建物の評価額</label><input type="number" id="building" min="0" value="3000000"><div class="hint">円単位</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="date">相続を知った日（亡くなった日など）</label><input type="date" id="date"></div>
+      <div class="field"><label for="pro">司法書士に頼む？</label><select id="pro"><option value="yes">頼む</option><option value="no">自分でやる</option></select></div>
+    </div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>相続登記のよくある質問</h2>
+    <h3>相続登記の期限は？</h3>
+    <p>不動産を相続したことを知った日から3年以内に申請する義務があります。2024年4月1日より前に相続した不動産も対象で、その場合は2027年3月31日までに申請が必要です。正当な理由なく申請しないと、10万円以下の過料の対象になります。</p>
+    <h3>登録免許税はいくら？</h3>
+    <p>固定資産税評価額の0.4%です（1,000円未満は切り捨てた評価額に税率をかけ、100円未満は切り捨て）。なお、評価額が100万円以下の土地は、2027年3月31日までの登記なら免税になります。</p>
+    <h3>遺産分割の話し合いがまとまらない場合は？</h3>
+    <p>期限内に話し合いがまとまらない場合は、「相続人申告登記」をすれば、とりあえず義務を果たしたことになります。自分が相続人であることを法務局に申し出るだけの簡単な手続きで、登録免許税もかかりません。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>登録免許税法と租税特別措置法（100万円以下の土地の免税措置）による計算です。司法書士の報酬は事務所によって異なる一般的な目安です。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const tt = new Date();
+$("date").value = `${tt.getFullYear()}-${String(tt.getMonth() + 1).padStart(2, "0")}-01`;
+const fmt = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const lands = $("lands").value.split(/[,、\s]+/).map(Number).filter(v => v > 0);
+  const building = num("building");
+  const [y, m, d] = ($("date").value || "").split("-").map(Number);
+  if (!y) { out.innerHTML = '<p class="err">相続を知った日を入力してください。</p>'; return; }
+  const nowLimit = new Date(2027, 2, 31);
+  const known = new Date(y, m - 1, d);
+  const exempt = nowLimit >= new Date(tt.getFullYear(), tt.getMonth(), tt.getDate());
+  const landRows = lands.map((v, i) => { const free = exempt && v <= 1000000; return { name: `土地${lands.length > 1 ? i + 1 : ""}`, v, tax: free ? 0 : floor100(floor1000(v) * 0.004), free }; });
+  const bTax = building ? floor100(floor1000(building) * 0.004) : 0;
+  const tax = landRows.reduce((s, r) => s + r.tax, 0) + bTax;
+  const totalTax = tax ? Math.max(1000, tax) : 0;
+  const proFee = $("pro").value === "yes" ? 80000 : 0;
+  const misc = 10000;
+  const deadline = known < new Date(2024, 3, 1) ? nowLimit : new Date(y + 3, m - 1, d);
+  const daysLeft = Math.ceil((deadline - tt) / 86400000);
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat warn"><div class="k">登録免許税</div><div class="v">${yen(totalTax)}</div></div>
+      <div class="stat"><div class="k">費用の合計の目安</div><div class="v">${yen(totalTax + proFee + misc)}</div></div>
+      <div class="stat ${daysLeft < 180 ? "warn" : ""}"><div class="k">相続登記の期限</div><div class="v" style="font-size:1.05rem">${fmt(deadline)}</div></div>
+    </div>
+    <table class="info">
+      ${landRows.map(r => `<tr><td>${r.name}（評価額 ${yen(r.v)}）</td><td class="num">${r.free ? "0円（100万円以下のため免税）" : yen(r.tax)}</td></tr>`).join("")}
+      ${building ? `<tr><td>建物（評価額 ${yen(building)}）</td><td class="num">${yen(bTax)}</td></tr>` : ""}
+      ${proFee ? `<tr><td>司法書士の報酬（目安）</td><td class="num">${yen(proFee)}前後</td></tr>` : ""}
+      <tr><td>戸籍謄本・住民票・評価証明書などの取得費（目安）</td><td class="num">${yen(misc)}前後</td></tr>
+    </table>
+    <p class="note">${daysLeft >= 0 ? `期限まで <strong>あと${daysLeft.toLocaleString("ja-JP")}日</strong> です。` : `<strong>期限を過ぎています。</strong>すぐに申請するか、相続人申告登記を行いましょう。`}${known < new Date(2024, 3, 1) ? "（2024年4月1日より前の相続なので、期限は2027年3月31日です）" : ""}</p>
+    <p class="note">相続した家を使う予定がないなら、売る・貸すといった選択肢も早めに考えておきましょう → <a href="/fudosan/urukasu/">実家 売る・貸す・持ち続ける 比較</a></p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>実家・空き家 売る・貸す・持ち続ける 比較シミュレーション｜どれがいちばん得？</title>
+<meta name="description" content="空き家になった実家や相続した家を、今売る・人に貸す・そのまま持ち続ける場合で、手元に残るお金を年数ごとに比較。固定資産税・管理費・修繕費・空室・家賃収入を入れるだけで、どの選択が得かがわかる無料シミュレーションです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/urukasu/">
+<link rel="stylesheet" href="../assets/style.css">
+<style>tr.best td{background:var(--good-soft);font-weight:700}</style>
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>実家・空き家 売る・貸す・持ち続ける 比較</h1>
+  <p class="lead">空き家になった実家や相続した家を、<strong>今売る</strong>・<strong>人に貸す</strong>・<strong>そのまま持ち続ける</strong>の3つで、決めた年数のあいだに<strong>手元に残るお金</strong>を比べます。</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label for="sellNow">今売った場合の手取り</label><input type="number" id="sellNow" min="0" value="1800"><div class="hint">万円単位。税金・手数料を引いた額（<a href="/fudosan/baikyaku/">手取り計算</a>）</div></div>
+      <div class="field"><label for="years">比べる期間</label><input type="number" id="years" min="1" max="30" value="10"><div class="hint">年</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="sellLater">期間の最後に売った場合の手取り</label><input type="number" id="sellLater" min="0" value="1300"><div class="hint">万円単位。建物が古くなるほど下がります</div></div>
+      <div class="field"><label for="tax">固定資産税・都市計画税（年）</label><input type="number" id="tax" min="0" value="12"><div class="hint">万円単位</div></div>
+    </div>
+    <h2>持ち続ける場合の費用</h2>
+    <div class="row">
+      <div class="field"><label for="keep">空き家の管理費・保険・光熱費など（年）</label><input type="number" id="keep" min="0" value="15"><div class="hint">万円単位（草刈り・見回り・火災保険・水道光熱の基本料金など）</div></div>
+      <div class="field"><label for="repairKeep">修繕費（期間中の合計）</label><input type="number" id="repairKeep" min="0" value="100"><div class="hint">万円単位</div></div>
+    </div>
+    <h2>貸す場合</h2>
+    <div class="row">
+      <div class="field"><label for="rent">家賃（月額）</label><input type="number" id="rent" min="0" value="8"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="vacant">空室の割合</label><input type="number" id="vacant" min="0" max="100" value="15"><div class="hint">%</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="reform">貸す前のリフォーム費用</label><input type="number" id="reform" min="0" value="200"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="mgmt">管理会社への手数料</label><input type="number" id="mgmt" min="0" max="30" value="5"><div class="hint">家賃の%</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="repairRent">貸している間の修繕費（期間中の合計）</label><input type="number" id="repairRent" min="0" value="150"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="incomeTax">家賃収入にかかる税金</label><input type="number" id="incomeTax" min="0" max="55" value="20"><div class="hint">%（所得税・住民税の合計の目安）</div></div>
+    </div>
+    <button id="calc">比較する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>空き家のよくある質問</h2>
+    <h3>空き家を持ち続けるとどうなる？</h3>
+    <p>住んでいなくても固定資産税や管理の手間・費用がかかり続け、建物は年々古くなって価値が下がります。管理が不十分で「特定空家」や「管理不全空家」に指定されると、土地の固定資産税の優遇（最大6分の1）がなくなり、税金が上がることもあります。</p>
+    <h3>貸すときの注意点は？</h3>
+    <p>貸すにはリフォームが必要なことが多く、空室の期間や修繕費、入居者とのトラブルのリスクもあります。また、普通借家契約で貸すと、あとで売りたくなっても入居者に出ていってもらうのが難しくなります。</p>
+    <h3>売るなら早い方がいい？</h3>
+    <p>建物は古くなるほど価値が下がるうえ、相続した空き家の3,000万円特別控除には、相続から3年目の年末までという期限があります。迷っているなら、まず今いくらで売れるかを査定で確かめておくと判断しやすくなります。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>入力した金額にもとづく単純な比較です。貸している間の火災保険などの費用は、空き家の管理費の4割として計算しています（売ったお金の運用益、物価や家賃の変動、貸した場合の減価償却などの節税効果は含めていません）。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const n = Math.max(1, Math.floor(num("years")));
+  const v = id => num(id) * MAN;
+  const sellNow = v("sellNow");
+  const keep = v("sellLater") - (v("tax") + v("keep")) * n - v("repairKeep");
+  // 貸す場合：家賃（空室を除く）− 管理手数料 − 固定資産税 − 保険など（空き家の管理費の4割）
+  const rentYear = v("rent") * 12 * (1 - num("vacant") / 100);
+  const costYear = rentYear * num("mgmt") / 100 + v("tax") + v("keep") * 0.4;
+  const profitYear = rentYear - costYear;
+  // 家賃収入の税金：期間中の利益からリフォーム・修繕費を経費として引いた額にかかる
+  const rentTax = Math.max(0, profitYear * n - v("reform") - v("repairRent")) * num("incomeTax") / 100;
+  const lend = v("sellLater") + profitYear * n - v("reform") - v("repairRent") - rentTax;
+  const rows = [
+    { name: "今売る", total: sellNow, note: "すぐに現金になり、その後の費用・手間がかからない" },
+    { name: "人に貸して、最後に売る", total: lend, note: `家賃収入（空室${num("vacant")}%）− 管理手数料・税金・修繕 ＋ 最後に売った手取り` },
+    { name: "持ち続けて、最後に売る", total: keep, note: "固定資産税・管理費・修繕費がかかり続ける" },
+  ];
+  const best = rows.reduce((a, b) => (b.total > a.total ? b : a));
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat good"><div class="k">${n}年間でいちばん手元に残るのは</div><div class="v" style="font-size:1.05rem">${best.name}</div></div>
+      <div class="stat"><div class="k">その金額</div><div class="v">${man(best.total)}</div></div>
+      <div class="stat"><div class="k">貸した場合の年間の手取り家賃</div><div class="v">${man(profitYear)}</div></div>
+    </div>
+    <table class="info"><tr><th>選択肢</th><th class="num">${n}年間で手元に残るお金</th></tr>
+      ${rows.map(r => `<tr class="${r === best ? "best" : ""}"><td>${r.name}<br><small style="color:var(--muted)">${r.note}</small></td><td class="num">${man(r.total)}</td></tr>`).join("")}</table>
+    <p class="note">持ち続けると、${n}年間で <strong>${man((v("tax") + v("keep")) * n + v("repairKeep"))}</strong> の費用がかかる計算です。${best.name === "今売る" ? "今売った場合の金額が結果を大きく左右するので、まずは複数の会社に査定を依頼して、正確な売却価格を確かめましょう。" : ""}</p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

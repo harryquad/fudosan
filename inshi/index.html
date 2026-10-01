@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>印紙税 計算ツール｜不動産売買契約書・工事請負契約書・住宅ローン契約書の印紙代（軽減措置2027年3月まで）</title>
+<meta name="description" content="契約金額を入れるだけで、不動産売買契約書・建設工事請負契約書（軽減措置あり）、住宅ローンなどの金銭消費貸借契約書に貼る印紙税の金額を計算。軽減前の金額や、一覧表も確認できる無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/inshi/">
+<link rel="stylesheet" href="../assets/style.css">
+<style>tr.me td{background:var(--accent-soft);font-weight:700}</style>
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>印紙税 計算ツール</h1>
+  <p class="lead">契約書に貼る<strong>収入印紙の金額</strong>を計算します。不動産売買契約書と建設工事の請負契約書は、<strong>2027年3月31日まで軽減</strong>されています。</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label for="type">契約書の種類</label>
+        <select id="type"><option value="baibai">不動産売買契約書（土地・建物の売買）</option><option value="koji">建設工事請負契約書（注文住宅・リフォーム）</option><option value="loan">金銭消費貸借契約書（住宅ローンなど）</option></select></div>
+      <div class="field"><label for="amount">契約金額</label><input type="number" id="amount" min="0" value="4000"><div class="hint">万円単位（消費税が区分して書かれていれば税抜）</div></div>
+    </div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>印紙税のよくある質問</h2>
+    <h3>売買契約書は何通に貼る？</h3>
+    <p>売主用・買主用の2通を作る場合は、それぞれに印紙が必要です（それぞれの保管する分を負担するのが一般的です）。1通だけ作り、もう一方はコピーを持つ場合は、原本の1通分で済みます。</p>
+    <h3>電子契約なら印紙はいらない？</h3>
+    <p>電子契約（紙の契約書を作らない）の場合、印紙税はかかりません。最近は不動産の売買でも電子契約に対応する会社が増えています。</p>
+    <h3>印紙を貼り忘れたら？</h3>
+    <p>契約自体は有効ですが、印紙税を納めていないと、本来の額の3倍（自分から申し出た場合は1.1倍）の過怠税がかかることがあります。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>国税庁の印紙税額一覧表と、不動産の譲渡・建設工事の請負に関する契約書の軽減措置（2027年3月31日までに作成されたもの）による金額です。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const LABEL = v => v === Infinity ? "50億円超" : v >= 1e8 ? `${v / 1e8}億円以下` : `${(v / MAN).toLocaleString("ja-JP")}万円以下`;
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const type = $("type").value, amount = num("amount") * MAN;
+  if (!amount) { out.innerHTML = '<p class="err">契約金額を入力してください。</p>'; return; }
+  const table = type === "baibai" ? INSHI_BAIBAI : type === "koji" ? INSHI_KOJI : INSHI_LOAN;
+  const reduced = type !== "loan";
+  const tax = inshi(table, amount, reduced), base = inshi(table, amount, false);
+  const row = table.find(r => amount <= r[0]);
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat warn"><div class="k">印紙税（1通あたり）</div><div class="v">${yen(tax)}</div></div>
+      <div class="stat"><div class="k">${reduced ? "軽減前の金額" : "軽減措置"}</div><div class="v">${reduced ? yen(base) : "なし"}</div></div>
+      <div class="stat ${reduced && base > tax ? "good" : ""}"><div class="k">${reduced ? "軽減で安くなる額" : "2通作る場合の合計"}</div><div class="v">${reduced ? yen(base - tax) : yen(tax * 2)}</div></div>
+    </div>
+    <h2 style="margin-top:14px">金額の一覧</h2>
+    <div style="overflow-x:auto"><table class="info"><tr><th>契約金額</th>${reduced ? '<th class="num">軽減後</th><th class="num">本則</th>' : '<th class="num">印紙税</th>'}</tr>
+      ${table.slice(1).map(r => `<tr class="${r === row ? "me" : ""}"><td>${LABEL(r[0])}</td>${reduced ? `<td class="num">${yen(r[2])}</td><td class="num">${yen(r[1])}</td>` : `<td class="num">${yen(r[1])}</td>`}</tr>`).join("")}
+    </table></div>
+    <p class="note">契約金額が1万円未満の場合は非課税です。家を買うときにかかる諸費用全体は → <a href="/fudosan/shohiyo/">購入時の諸費用 計算</a></p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

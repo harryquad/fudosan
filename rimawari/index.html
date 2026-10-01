@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>不動産投資 利回り・キャッシュフロー 計算｜表面利回り・実質利回り・ローン返済後に残るお金</title>
+<meta name="description" content="物件価格・家賃・経費・ローンの条件を入れるだけで、不動産投資の表面利回り・実質利回り（NOI利回り）・ローン返済後の年間キャッシュフロー・自己資金に対する利回りを計算。空室や金利上昇の影響もわかる無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/rimawari/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>不動産投資 利回り・キャッシュフロー 計算</h1>
+  <p class="lead">投資用の物件について、<strong>表面利回り</strong>・<strong>実質利回り</strong>と、ローンを返したあとに<strong>毎年手元に残るお金</strong>（キャッシュフロー）を計算します。</p>
+
+  <div class="card">
+    <h2>物件</h2>
+    <div class="row">
+      <div class="field"><label for="price">物件価格</label><input type="number" id="price" min="0" value="3000"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="cost">購入時の諸費用</label><input type="number" id="cost" min="0" value="200"><div class="hint">万円単位（物件価格の6〜8%が目安）</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="rent">満室時の家賃収入（月）</label><input type="number" id="rent" min="0" value="24"><div class="hint">万円単位（全室の合計）</div></div>
+      <div class="field"><label for="vacant">空室率</label><input type="number" id="vacant" min="0" max="100" value="10"><div class="hint">%</div></div>
+    </div>
+    <h2>経費（年間）</h2>
+    <div class="row">
+      <div class="field"><label for="mgmt">管理委託費</label><input type="number" id="mgmt" min="0" max="30" value="5"><div class="hint">家賃収入の%</div></div>
+      <div class="field"><label for="tax">固定資産税・都市計画税</label><input type="number" id="tax" min="0" value="20"><div class="hint">万円単位</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="repair">修繕費・原状回復費</label><input type="number" id="repair" min="0" value="20"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="otherCost">保険・共用部の光熱費・そのほか</label><input type="number" id="otherCost" min="0" value="10"><div class="hint">万円単位</div></div>
+    </div>
+    <h2>ローン</h2>
+    <div class="row">
+      <div class="field"><label for="loan">借入額</label><input type="number" id="loan" min="0" value="2700"><div class="hint">万円単位（全額自己資金なら0）</div></div>
+      <div class="field"><label for="rate">金利（年）</label><input type="number" id="rate" min="0" max="20" step="0.1" value="2.5"><div class="hint">%</div></div>
+    </div>
+    <div class="field"><label for="years">返済期間</label><input type="number" id="years" min="1" max="50" value="30"><div class="hint">年</div></div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>不動産投資のよくある質問</h2>
+    <h3>表面利回りと実質利回りの違いは？</h3>
+    <p>表面利回りは「満室時の年間家賃 ÷ 物件価格」で、広告によく書かれている数字です。実質利回りは、空室や管理費・税金などの経費を引いた収入を、諸費用を含めた購入総額で割ったもので、実際の収益力に近い数字です。</p>
+    <h3>キャッシュフローがマイナスだとどうなる？</h3>
+    <p>家賃収入で経費とローン返済をまかなえず、毎年自分のお金を足すことになります。空室の増加、家賃の下落、金利の上昇、大きな修繕が重なると、さらに悪化するおそれがあります。</p>
+    <h3>どれくらいの利回りなら良い？</h3>
+    <p>地域・築年数・物件の種類で大きく違うので、一概には言えません。同じ地域の似た物件と比べること、空室率や金利が上がった場合でもキャッシュフローがマイナスにならないかを確かめることが大切です。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>ローンは元利均等返済で計算しています。所得税・住民税、減価償却による節税効果、家賃の下落などは含めていません。特定の物件や投資をすすめるものではありません。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const annuity = (P, rate, n) => { const r = rate / 12; return !P ? 0 : r ? P * r / (1 - Math.pow(1 + r, -n)) : P / n; };
+function scenario(vacant, rate) {
+  const rentFull = num("rent") * MAN * 12;
+  const income = rentFull * (1 - vacant / 100);
+  const opex = income * num("mgmt") / 100 + (num("tax") + num("repair") + num("otherCost")) * MAN;
+  const noi = income - opex;
+  const debt = annuity(num("loan") * MAN, rate / 100, Math.round(num("years") * 12)) * 12;
+  return { rentFull, income, opex, noi, debt, cf: noi - debt };
+}
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const price = num("price") * MAN, total = price + num("cost") * MAN;
+  if (!price || !num("rent")) { out.innerHTML = '<p class="err">物件価格と家賃を入力してください。</p>'; return; }
+  const equity = Math.max(0, total - num("loan") * MAN);
+  const s = scenario(num("vacant"), num("rate"));
+  const stress = scenario(num("vacant") + 10, num("rate") + 1);
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat"><div class="k">表面利回り</div><div class="v">${(s.rentFull / price * 100).toFixed(2)}%</div></div>
+      <div class="stat"><div class="k">実質利回り（NOI ÷ 購入総額）</div><div class="v">${(s.noi / total * 100).toFixed(2)}%</div></div>
+      <div class="stat ${s.cf >= 0 ? "good" : "warn"}"><div class="k">年間キャッシュフロー</div><div class="v">${s.cf >= 0 ? "" : "−"}${man(Math.abs(s.cf))}</div></div>
+    </div>
+    <table class="info">
+      <tr><td>家賃収入（空室${num("vacant")}%を考慮）</td><td class="num">${man(s.income)}</td></tr>
+      <tr><td>経費（管理費・税金・修繕など）</td><td class="num">−${man(s.opex)}</td></tr>
+      <tr><td>営業純収益（NOI）</td><td class="num">${man(s.noi)}</td></tr>
+      <tr><td>ローン返済（年間）</td><td class="num">−${man(s.debt)}</td></tr>
+      <tr><td><strong>キャッシュフロー（月あたり）</strong></td><td class="num"><strong>${s.cf >= 0 ? "" : "−"}${yen(Math.abs(s.cf) / 12)}</strong></td></tr>
+      <tr><td>自己資金（諸費用込み）</td><td class="num">${man(equity)}</td></tr>
+      <tr><td>自己資金に対する利回り（CCR）</td><td class="num">${equity ? (s.cf / equity * 100).toFixed(2) + "%" : "—"}</td></tr>
+      <tr><td>返済比率（ローン返済 ÷ 家賃収入）</td><td class="num">${s.income ? (s.debt / s.income * 100).toFixed(1) : 0}%</td></tr>
+    </table>
+    <h2 style="margin-top:14px">条件が悪くなった場合</h2>
+    <table class="info"><tr><td>空室率 +10%・金利 +1% のとき</td><td class="num">${stress.cf >= 0 ? "" : "−"}${man(Math.abs(stress.cf))}／年</td></tr></table>
+    ${stress.cf < 0 ? '<p class="note">条件が少し悪くなるとキャッシュフローがマイナスになります。自己資金を増やす、借入期間を見直すなど、余裕のある計画を考えましょう。</p>' : '<p class="note">空室や金利が多少悪くなっても、キャッシュフローはプラスを保てる計算です。</p>'}`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

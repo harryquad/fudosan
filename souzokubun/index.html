@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>法定相続分 計算ツール｜誰がどれだけ相続する？配偶者・子・親・兄弟姉妹の割合と金額</title>
+<meta name="description" content="家族構成と財産の額を入れるだけで、民法で決められた法定相続人と法定相続分（配偶者と子は2分の1ずつ、など）、一人ひとりが相続する金額を計算。遺留分の目安もわかる無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/souzokubun/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>法定相続分 計算ツール</h1>
+  <p class="lead">家族構成から、<strong>誰が相続人になるか</strong>（法定相続人）と、<strong>それぞれの取り分</strong>（法定相続分）を計算します。財産の額を入れると、一人ひとりの金額と<strong>遺留分</strong>の目安もわかります。</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label for="spouse">配偶者</label><select id="spouse"><option value="1">いる</option><option value="0">いない</option></select></div>
+      <div class="field"><label for="children">子どもの人数</label><input type="number" id="children" min="0" max="10" value="2"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="parents">親（存命の人数）</label><input type="number" id="parents" min="0" max="2" value="1"></div>
+      <div class="field"><label for="siblings">兄弟姉妹の人数</label><input type="number" id="siblings" min="0" max="10" value="2"></div>
+    </div>
+    <div class="field"><label for="estate">財産の総額（任意）</label><input type="number" id="estate" min="0" value="6000"><div class="hint">万円単位</div></div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>法定相続分のよくある質問</h2>
+    <h3>相続人になる順番は？</h3>
+    <p>配偶者は必ず相続人になります。それ以外は、①子ども（亡くなっていれば孫）、②親（祖父母）、③兄弟姉妹（亡くなっていれば甥・姪）の順で、先の順位の人がいれば、あとの順位の人は相続人になりません。</p>
+    <h3>法定相続分どおりに分けないといけない？</h3>
+    <p>いいえ。遺言書があればその内容が優先され、相続人全員が話し合って合意すれば（遺産分割協議）、法定相続分と違う割合で分けることもできます。法定相続分は、話し合いの目安や、決まらないときの基準になる割合です。</p>
+    <h3>遺留分とは？</h3>
+    <p>配偶者・子ども・親に保障された、最低限の取り分です。遺言で「全財産を長男に」となっていても、ほかの相続人は遺留分を請求できます。兄弟姉妹には遺留分はありません。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>民法の法定相続分・遺留分の規定による計算です。養子・相続放棄・代襲相続・半血の兄弟姉妹などの細かい扱いは含めていません。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const fam = { spouse: $("spouse").value === "1", children: Math.floor(num("children")), parents: Math.floor(num("parents")), siblings: Math.floor(num("siblings")) };
+  const hs = heirs(fam);
+  if (!hs.length) { out.innerHTML = '<p class="err">法定相続人がいません。財産は、特別縁故者への分与などを経て、最終的には国のものになります。</p>'; return; }
+  const estate = num("estate") * MAN;
+  // 遺留分：直系尊属のみなら財産の1/3、それ以外は1/2（兄弟姉妹はなし）
+  const onlyParents = !fam.spouse && fam.children === 0 && fam.parents > 0;
+  const iryuTotal = onlyParents ? 1 / 3 : 1 / 2;
+  const order = fam.children > 0 ? "第1順位（子ども）" : fam.parents > 0 ? "第2順位（親）" : fam.siblings > 0 ? "第3順位（兄弟姉妹）" : "配偶者のみ";
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat"><div class="k">法定相続人</div><div class="v">${hs.length}人</div></div>
+      <div class="stat"><div class="k">相続する順位</div><div class="v" style="font-size:1rem">${order}</div></div>
+      <div class="stat"><div class="k">相続税の基礎控除</div><div class="v">${man(30000000 + 6000000 * hs.length)}</div></div>
+    </div>
+    <table class="info"><tr><th>相続人</th><th class="num">法定相続分</th>${estate ? '<th class="num">金額</th>' : ""}<th class="num">遺留分</th></tr>
+      ${hs.map(h => { const iryu = h.add20 ? 0 : iryuTotal * h.share; return `<tr><td>${h.who}</td><td class="num">${frac(h.share)}</td>${estate ? `<td class="num">${man(estate * h.share)}</td>` : ""}<td class="num">${iryu ? frac(iryu) + (estate ? `（${man(estate * iryu)}）` : "") : "なし"}</td></tr>`; }).join("")}
+    </table>
+    ${fam.children > 0 && (fam.parents || fam.siblings) ? '<p class="note">子どもがいるので、親や兄弟姉妹は相続人になりません。</p>' : ""}
+    <p class="note">相続税がかかるかどうかは → <a href="/fudosan/">相続税 計算</a></p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

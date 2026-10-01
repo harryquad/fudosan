@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>贈与税 計算ツール｜暦年贈与（110万円）と相続時精算課税（2,500万円）を比較・特例税率対応</title>
+<meta name="description" content="贈与する金額と、あげる人・もらう人の関係を選ぶだけで、贈与税を計算。暦年課税（基礎控除110万円・一般税率／特例税率）と、相続時精算課税（特別控除2,500万円＋年110万円）の両方で比べられる無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/zouyo/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>贈与税 計算ツール</h1>
+  <p class="lead">生前にお金や不動産をあげる（贈与する）と、もらった人に<strong>贈与税</strong>がかかることがあります。<strong>暦年課税</strong>と<strong>相続時精算課税</strong>の2つの方法で、贈与税を計算して比べます。</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label for="amount">その年にもらう金額（1人から）</label><input type="number" id="amount" min="0" value="500"><div class="hint">万円単位（不動産は相続税評価額）</div></div>
+      <div class="field"><label for="rel">あげる人ともらう人の関係</label>
+        <select id="rel"><option value="tokurei">親・祖父母から、18歳以上の子・孫へ</option><option value="ippan">それ以外（夫婦間・兄弟・他人など）</option></select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="years">何年続けて贈与する予定か</label><input type="number" id="years" min="1" max="30" value="1"></div>
+      <div class="field"><label for="used">相続時精算課税で、すでに使った特別控除</label><input type="number" id="used" min="0" max="2500" value="0"><div class="hint">万円単位（初めてなら0）</div></div>
+    </div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>贈与税のよくある質問</h2>
+    <h3>年110万円までなら税金はかからない？</h3>
+    <p>暦年課税では、1人が1年間（1〜12月）にもらった合計が110万円以下なら、贈与税はかかりません。ただし、亡くなる前7年以内（2024年以降の贈与から段階的に延長）にもらった分は、相続税の計算に足し戻されます。</p>
+    <h3>相続時精算課税とは？</h3>
+    <p>60歳以上の親・祖父母から18歳以上の子・孫への贈与で選べる方法です。毎年110万円までは非課税で、それを超えても累計2,500万円までは贈与税がかかりません（超えた分は20%）。そのかわり、年110万円を超えた分は、相続のときに相続財産に足し戻して相続税を計算します。一度選ぶと、暦年課税には戻れません。</p>
+    <h3>不動産を贈与するときの注意点は？</h3>
+    <p>不動産を贈与すると、贈与税のほかに、登録免許税（評価額の2%）と不動産取得税がかかり、相続でもらうより費用が高くなることが多いです。住宅取得資金の贈与の非課税制度など、使える特例がないか確認しましょう。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>国税庁の贈与税の速算表（一般税率・特例税率）と相続時精算課税のしくみによる計算です。住宅取得等資金・教育資金などの非課税特例は含めていません。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const IPPAN = [[2e6, .1, 0], [3e6, .15, 1e5], [4e6, .2, 2.5e5], [6e6, .3, 6.5e5], [1e7, .4, 1.25e6], [1.5e7, .45, 1.75e6], [3e7, .5, 2.5e6], [Infinity, .55, 4e6]];
+const TOKUREI = [[2e6, .1, 0], [4e6, .15, 1e5], [6e6, .2, 3e5], [1e7, .3, 9e5], [1.5e7, .4, 1.9e6], [3e7, .45, 2.65e6], [4.5e7, .5, 4.15e6], [Infinity, .55, 6.4e6]];
+const giftTax = (x, table) => { const b = Math.max(0, x - 1100000); if (!b) return 0; const [, r, d] = table.find(t => b <= t[0]); return floor100(b * r - d); };
+
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const amount = num("amount") * MAN, years = Math.max(1, Math.floor(num("years")));
+  const tokurei = $("rel").value === "tokurei";
+  const table = tokurei ? TOKUREI : IPPAN;
+  const reki = giftTax(amount, table);
+  // 相続時精算課税：年110万円の基礎控除 → 残りを累計2,500万円の特別控除から → 超えた分は20%
+  let left = Math.max(0, 25000000 - num("used") * MAN), seisanTotal = 0;
+  for (let y = 0; y < years; y++) { const over = Math.max(0, amount - 1100000); const use = Math.min(over, left); left -= use; seisanTotal += floor100((over - use) * 0.2); }
+  const rekiTotal = reki * years;
+  const back = Math.max(0, amount - 1100000) * years;
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat warn"><div class="k">暦年課税の贈与税（1年分）</div><div class="v">${yen(reki)}</div></div>
+      <div class="stat ${tokurei ? "good" : ""}"><div class="k">相続時精算課税の贈与税（${years}年分）</div><div class="v">${tokurei ? yen(seisanTotal) : "使えない"}</div></div>
+      <div class="stat"><div class="k">暦年課税の贈与税（${years}年分）</div><div class="v">${yen(rekiTotal)}</div></div>
+    </div>
+    <table class="info">
+      <tr><td>もらう総額（${years}年分）</td><td class="num">${man(amount * years)}</td></tr>
+      <tr><td>暦年課税の税率の区分</td><td class="num">${tokurei ? "特例税率（直系尊属から18歳以上へ）" : "一般税率"}</td></tr>
+      <tr><td>実質の税率（暦年課税）</td><td class="num">${amount ? (reki / amount * 100).toFixed(1) : 0}%</td></tr>
+      ${tokurei ? `<tr><td>相続時精算課税で、相続財産に足し戻される額</td><td class="num">${man(back)}</td></tr>
+      <tr><td>残りの特別控除</td><td class="num">${man(left)}</td></tr>` : ""}
+    </table>
+    ${tokurei ? '<p class="note">相続時精算課税は、贈与のときの税金は少なくなりますが、相続のときに足し戻して相続税を計算します。相続税がかからない見込みの人や、値上がりしそうな財産を早めに渡したい場合に向いています。どちらが得かは、相続財産全体で考える必要があります。</p>' : '<p class="note">相続時精算課税は、60歳以上の親・祖父母から18歳以上の子・孫への贈与でのみ使えます。</p>'}
+    <p class="note">相続財産全体で相続税がかかるかどうかは → <a href="/fudosan/">相続税 計算</a></p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

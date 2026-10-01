@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>不動産売却 手取り計算シミュレーション｜仲介手数料・譲渡所得税・3,000万円控除・相続空き家の特例</title>
+<meta name="description" content="売却価格と購入時の価格・時期を入れるだけで、家や土地を売ったときの手取り額を計算。仲介手数料・印紙税・譲渡所得税（長期・短期・10年超の軽減税率）、居住用の3,000万円特別控除、相続した空き家の特例、建物の減価償却にも対応した無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/baikyaku/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>不動産売却 手取り計算シミュレーション</h1>
+  <p class="lead">家や土地を売ったときに、仲介手数料・税金・ローンの残りを差し引いて<strong>手元にいくら残るか</strong>を計算します。<strong>3,000万円の特別控除</strong>や<strong>相続した空き家の特例</strong>にも対応しています。</p>
+
+  <div class="card">
+    <h2>売るもの</h2>
+    <div class="row">
+      <div class="field"><label for="price">売却価格</label><input type="number" id="price" min="0" value="3500"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="sellDate">売る（引き渡す）年月</label><input type="month" id="sellDate"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="buyDate">買った年月（相続の場合は亡くなった人が買った年月）</label><input type="month" id="buyDate" value="2008-04"></div>
+      <div class="field"><label for="struct">建物の構造</label>
+        <select id="struct"><option value="33">木造</option><option value="40">軽量鉄骨（骨格3〜4mm）</option><option value="51">鉄骨造（骨格4mm超）</option><option value="70">鉄筋コンクリート造（マンションなど）</option><option value="0">建物なし（土地だけ）</option></select></div>
+    </div>
+    <h2>買ったときの金額（取得費）</h2>
+    <div class="field"><div class="checks"><label><input type="checkbox" id="unknown">買ったときの金額がわからない（売却価格の5%で計算）</label></div></div>
+    <div class="row" id="costRow">
+      <div class="field"><label for="landCost">土地の購入価格</label><input type="number" id="landCost" min="0" value="1800"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="bldCost">建物の購入価格</label><input type="number" id="bldCost" min="0" value="1700"><div class="hint">万円単位</div></div>
+    </div>
+    <div class="field" id="buyFeeRow"><label for="buyFee">買ったときの諸費用（仲介手数料・登記費用など）</label><input type="number" id="buyFee" min="0" value="150"><div class="hint">万円単位</div></div>
+    <h2>特例とそのほかの費用</h2>
+    <div class="field"><label for="tokurei">使える特例</label>
+      <select id="tokurei">
+        <option value="home">自分が住んでいた家を売る（3,000万円特別控除）</option>
+        <option value="akiya3">相続した空き家を売る（3,000万円特別控除・相続人2人以下）</option>
+        <option value="akiya2">相続した空き家を売る（2,000万円特別控除・相続人3人以上）</option>
+        <option value="none">特例なし（投資用・別荘・相続した土地など）</option>
+      </select></div>
+    <div class="row">
+      <div class="field"><label for="other">測量・解体・そのほかの売却費用</label><input type="number" id="other" min="0" value="0"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="loan">住宅ローンの残り</label><input type="number" id="loan" min="0" value="800"><div class="hint">万円単位。売ったお金で返す額</div></div>
+    </div>
+    <button id="calc">手取りを計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>不動産売却のよくある質問</h2>
+    <h3>売ったときの税金はどう決まる？</h3>
+    <p>「売却価格 −（取得費＋売却にかかった費用）− 特別控除」の利益（譲渡所得）に税金がかかります。売った年の1月1日時点で所有期間が5年を超えていれば約20%（長期）、5年以下なら約39%（短期）です。自分が住んでいた家で所有期間が10年を超えていれば、6,000万円以下の部分は約14%に下がります。</p>
+    <h3>3,000万円特別控除とは？</h3>
+    <p>自分が住んでいた家（住まなくなってから3年目の年末までに売る場合を含む）を売ったときに、利益から3,000万円を差し引ける特例です。利益が3,000万円以下なら税金はかかりません。ただし、確定申告は必要です。住宅ローン控除とは同時に使えない期間があるので注意しましょう。</p>
+    <h3>相続した空き家の特例とは？</h3>
+    <p>1981年5月31日以前に建てられた一戸建てで、亡くなった人がひとりで住んでいた家を相続し、2027年12月31日までに売る場合などに使える特例です（相続から3年目の年末まで、売却価格1億円以下）。相続人が3人以上の場合は、1人あたり2,000万円になります。売ったあと翌年2月15日までに買主が耐震改修や取り壊しをする場合も対象です。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>租税特別措置法の長期・短期譲渡所得の税率（復興特別所得税を含む）と特別控除による概算です。建物の減価償却は、居住用（非事業用）として、法定耐用年数の1.5倍で定額法により計算しています。特例の詳しい要件は税務署・税理士にご確認ください。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const tt = new Date();
+$("sellDate").value = `${tt.getFullYear()}-${String(tt.getMonth() + 1).padStart(2, "0")}`;
+$("unknown").addEventListener("change", () => { const u = $("unknown").checked; $("costRow").hidden = u; $("buyFeeRow").hidden = u; });
+// 非事業用の償却率（耐用年数×1.5）
+const DEP_RATE = { 33: 0.031, 40: 0.025, 51: 0.020, 70: 0.015 };
+
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const price = num("price") * MAN;
+  const [sy, sm] = ($("sellDate").value || "").split("-").map(Number);
+  const [by, bm] = ($("buyDate").value || "").split("-").map(Number);
+  if (!price || !sy || !by) { out.innerHTML = '<p class="err">売却価格と年月を入力してください。</p>'; return; }
+  const struct = Number($("struct").value);
+  // 所有期間：売った年の1月1日時点
+  const ownJan1 = ((sy - by) * 12 - (bm - 1)) / 12; // 買った月の1日から、売った年の1月1日までの年数
+  const longTerm = ownJan1 > 5, over10 = ownJan1 > 10;
+  const ownedYears = Math.max(0, (sy - by) + (sm - bm) / 12);
+  // 取得費
+  let acquire, dep = 0;
+  if ($("unknown").checked) acquire = price * 0.05;
+  else {
+    const bld = num("bldCost") * MAN;
+    if (struct && bld) {
+      const yrs = Math.floor(ownedYears + 0.5); // 6か月以上は1年、未満は切り捨て
+      dep = Math.min(bld * 0.95, bld * 0.9 * DEP_RATE[struct] * yrs);
+    }
+    acquire = Math.max(num("landCost") * MAN + bld - dep + num("buyFee") * MAN, price * 0.05);
+  }
+  const fee = chukai(price);
+  const stamp = inshi(INSHI_BAIBAI, price);
+  const sellCost = fee + stamp + num("other") * MAN;
+  const gain = Math.max(0, price - acquire - sellCost);
+  const t = $("tokurei").value;
+  const special = t === "home" || t === "akiya3" ? 30000000 : t === "akiya2" ? 20000000 : 0;
+  const akiyaNg = (t === "akiya3" || t === "akiya2") && price > 100000000;
+  const sp = akiyaNg ? 0 : Math.min(gain, special);
+  const taxable = Math.floor((gain - sp) / 1000) * 1000;
+  let tax;
+  if (!longTerm) tax = taxable * 0.3963;
+  else if (t === "home" && over10) tax = Math.min(taxable, 60000000) * 0.1421 + Math.max(0, taxable - 60000000) * 0.20315;
+  else tax = taxable * 0.20315;
+  tax = Math.floor(tax);
+  const release = 20000;
+  const net = price - sellCost - release - num("loan") * MAN - tax;
+  const rateLabel = !longTerm ? "短期（約39.63%）" : t === "home" && over10 ? "長期・10年超の軽減（6,000万円以下は約14.21%）" : "長期（約20.315%）";
+
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat good"><div class="k">手元に残る金額</div><div class="v">${man(net)}</div></div>
+      <div class="stat warn"><div class="k">税金（所得税・住民税）</div><div class="v">${man(tax)}</div></div>
+      <div class="stat"><div class="k">売却にかかる費用</div><div class="v">${man(sellCost + release)}</div></div>
+    </div>
+    <table class="info">
+      <tr><td>売却価格</td><td class="num">${man(price)}</td></tr>
+      <tr><td>仲介手数料（上限・税込）</td><td class="num">−${yen(fee)}</td></tr>
+      <tr><td>印紙税（売買契約書）</td><td class="num">−${yen(stamp)}</td></tr>
+      ${num("other") ? `<tr><td>測量・解体などの費用</td><td class="num">−${man(num("other") * MAN)}</td></tr>` : ""}
+      <tr><td>抵当権の抹消費用（目安）</td><td class="num">−${yen(release)}</td></tr>
+      <tr><td>住宅ローンの返済</td><td class="num">−${man(num("loan") * MAN)}</td></tr>
+      <tr><td>譲渡所得税・住民税</td><td class="num">−${man(tax)}</td></tr>
+    </table>
+    <h2 style="margin-top:14px">税金の計算</h2>
+    <table class="info">
+      <tr><td>取得費${$("unknown").checked ? "（売却価格の5%）" : dep ? `（建物の減価償却 ${man(dep)} を差し引き後）` : ""}</td><td class="num">${man(acquire)}</td></tr>
+      <tr><td>譲渡所得（利益）</td><td class="num">${man(gain)}</td></tr>
+      <tr><td>特別控除</td><td class="num">${man(sp)}</td></tr>
+      <tr><td>税金がかかる利益</td><td class="num">${man(taxable)}</td></tr>
+      <tr><td>所有期間（売った年の1月1日時点）・税率</td><td class="num">約${Math.max(0, ownJan1).toFixed(1)}年・${rateLabel}</td></tr>
+    </table>
+    ${akiyaNg ? '<p class="err">売却価格が1億円を超えるため、相続した空き家の特例は使えません。</p>' : ""}
+    ${!longTerm && ownJan1 > 4 ? `<p class="note">あと少しで所有期間が5年を超えます。売る年を${by + 6}年以降にすると、税率が約39%から約20%に下がります。</p>` : ""}
+    ${sp ? '<p class="note">特別控除を使う場合は、税金が0円になっても確定申告が必要です（売った翌年の2月16日〜3月15日）。</p>' : ""}
+    ${net < 0 ? '<p class="err">売却価格でローンや費用を払いきれない計算です（オーバーローン）。不足分を手元のお金で補う必要があります。</p>' : ""}
+    <p class="note">売却価格は不動産会社によって数百万円の差が出ることもあります。<strong>複数の会社に査定を依頼して比べる</strong>のが、手取りを増やすいちばん確実な方法です。</p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

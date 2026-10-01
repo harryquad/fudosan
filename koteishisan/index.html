@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>固定資産税・都市計画税 計算ツール｜住宅用地の特例（1/6・1/3）と新築住宅の減額（2031年3月まで延長）</title>
+<meta name="description" content="土地と建物の固定資産税評価額、面積を入れるだけで、固定資産税（1.4%）と都市計画税（0.3%）の年額を計算。小規模住宅用地の特例（6分の1）や新築住宅の税額の減額（2031年3月31日まで延長）にも対応した無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/koteishisan/">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>固定資産税・都市計画税 計算ツール</h1>
+  <p class="lead">土地と建物の評価額から、毎年かかる<strong>固定資産税</strong>と<strong>都市計画税</strong>を計算します。住宅が建っている土地の特例や、新築住宅の減額も反映します。</p>
+
+  <div class="card">
+    <h2>土地</h2>
+    <div class="row">
+      <div class="field"><label for="landVal">土地の評価額</label><input type="number" id="landVal" min="0" value="2000"><div class="hint">万円単位。課税明細書の「価格」または「評価額」</div></div>
+      <div class="field"><label for="landArea">土地の面積</label><input type="number" id="landArea" min="0" value="150"><div class="hint">㎡（マンションは敷地の持分）</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="use">土地の使い道</label>
+        <select id="use"><option value="home">住宅が建っている</option><option value="none">住宅が建っていない（更地・駐車場など）</option></select></div>
+      <div class="field"><label for="units">住宅の戸数</label><input type="number" id="units" min="1" max="100" value="1"><div class="hint">アパートなら部屋数</div></div>
+    </div>
+    <h2>建物</h2>
+    <div class="row">
+      <div class="field"><label for="bldVal">建物の評価額</label><input type="number" id="bldVal" min="0" value="1000"><div class="hint">万円単位</div></div>
+      <div class="field"><label for="floor">建物の床面積（1戸あたり）</label><input type="number" id="floor" min="0" value="110"><div class="hint">㎡</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="newType">新築住宅の減額</label>
+        <select id="newType"><option value="0">対象外（新築から期間がたった・住宅以外）</option><option value="3">新築一戸建て（3年間）</option><option value="5">新築マンションなど3階建て以上の耐火・準耐火（5年間）</option><option value="5L">長期優良住宅の一戸建て（5年間）</option><option value="7">長期優良住宅のマンション（7年間）</option></select></div>
+      <div class="field"><label for="city">都市計画税</label><select id="city"><option value="0.003">かかる（市街化区域・税率0.3%）</option><option value="0">かからない</option></select></div>
+    </div>
+    <button id="calc">計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>固定資産税のよくある質問</h2>
+    <h3>住宅用地の特例とは？</h3>
+    <p>住宅が建っている土地は、1戸あたり200㎡までの部分（小規模住宅用地）は評価額の6分の1、それを超える部分（一般住宅用地）は3分の1に下げて固定資産税を計算します。都市計画税は、それぞれ3分の1・3分の2になります。</p>
+    <h3>新築住宅の減額とは？</h3>
+    <p>新築の住宅は、床面積120㎡までの部分の建物の固定資産税が、一戸建ては3年間、マンションなどは5年間、半分になります（長期優良住宅はさらに長い期間）。2026年度の改正で、この措置は2031年3月31日まで延長されました。</p>
+    <h3>家を壊して更地にすると税金は上がる？</h3>
+    <p>住宅用地の特例が使えなくなるため、土地の固定資産税は最大で6倍近くになることがあります（負担調整措置により、実際はそこまで上がらないこともあります）。空き家を解体するかどうかを決めるときは、この点も考えましょう。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>標準税率（固定資産税1.4%、都市計画税は上限の0.3%）による計算です。実際の税額は市区町村の税率や負担調整措置によって異なります。正確な金額は毎年届く納税通知書でご確認ください。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const landVal = num("landVal") * MAN, area = num("landArea"), units = Math.max(1, Math.floor(num("units")));
+  const bldVal = num("bldVal") * MAN, floor = num("floor");
+  const cityRate = Number($("city").value);
+  let landBaseK = landVal, landBaseT = landVal, note = "住宅用地の特例なし";
+  if ($("use").value === "home" && area) {
+    const small = Math.min(area, 200 * units), general = Math.max(0, Math.min(area, floor * units * 10) - small); // 住宅用地は床面積の10倍まで
+    const rest = Math.max(0, area - small - general);
+    const per = landVal / area;
+    landBaseK = per * small / 6 + per * general / 3 + per * rest;
+    landBaseT = per * small / 3 + per * general * 2 / 3 + per * rest;
+    note = `小規模住宅用地 ${small}㎡（1/6）${general ? `・一般住宅用地 ${general}㎡（1/3）` : ""}`;
+  }
+  const landK = floor100(floor1000(landBaseK) * 0.014), landT = floor100(floor1000(landBaseT) * cityRate);
+  let bldK = floor100(floor1000(bldVal) * 0.014);
+  const bldT = floor100(floor1000(bldVal) * cityRate);
+  const nt = $("newType").value;
+  let cut = 0;
+  if (nt !== "0") cut = floor100(bldK * Math.min(1, 120 / Math.max(floor, 1)) * 0.5);
+  const years = { 3: "3年間", 5: "5年間", "5L": "5年間", 7: "7年間" }[nt];
+  const total = landK + landT + bldK - cut + bldT;
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat warn"><div class="k">1年間の合計</div><div class="v">${yen(total)}</div></div>
+      <div class="stat"><div class="k">固定資産税</div><div class="v">${yen(landK + bldK - cut)}</div></div>
+      <div class="stat"><div class="k">都市計画税</div><div class="v">${yen(landT + bldT)}</div></div>
+    </div>
+    <table class="info">
+      <tr><th></th><th class="num">固定資産税</th><th class="num">都市計画税</th></tr>
+      <tr><td>土地<br><small style="color:var(--muted)">${note}</small></td><td class="num">${yen(landK)}</td><td class="num">${yen(landT)}</td></tr>
+      <tr><td>建物</td><td class="num">${yen(bldK)}</td><td class="num">${yen(bldT)}</td></tr>
+      ${cut ? `<tr><td>新築住宅の減額（${years}）</td><td class="num">−${yen(cut)}</td><td class="num">—</td></tr>` : ""}
+    </table>
+    ${cut ? `<p class="note">減額の期間が終わると、建物の固定資産税は年${yen(cut)}ほど上がります（評価額は年々下がるので、実際の上がり方は少し小さくなります）。</p>` : ""}
+    ${$("use").value === "home" ? `<p class="note">住宅を取り壊して更地にすると、土地の固定資産税・都市計画税は最大で年${yen(floor100(floor1000(landVal) * 0.014) + floor100(floor1000(landVal) * cityRate) - landK - landT)}ほど上がる可能性があります。</p>` : ""}`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

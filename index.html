@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>相続税 計算シミュレーション｜かかる？いくら？家族構成と財産から自動計算（基礎控除・配偶者の軽減）</title>
+<meta name="description" content="財産の額と家族構成を入れるだけで、相続税がかかるかどうか（基礎控除3,000万円＋600万円×法定相続人）と、相続税の総額・一人ひとりの税額を計算。生命保険金の非課税枠、配偶者の税額軽減、2割加算にも対応した無料シミュレーションです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>相続税 計算シミュレーション</h1>
+  <p class="lead">財産の額と家族構成から、<strong>相続税がかかるかどうか</strong>と、<strong>相続税の総額・一人ひとりの税額</strong>を計算します。生命保険金の非課税枠や、配偶者の税額軽減にも対応しています。</p>
+
+  <div class="card">
+    <h2>家族（亡くなった人から見て）</h2>
+    <div class="row">
+      <div class="field"><label for="spouse">配偶者</label><select id="spouse"><option value="1">いる</option><option value="0">いない</option></select></div>
+      <div class="field"><label for="children">子どもの人数</label><input type="number" id="children" min="0" max="10" value="2"><div class="hint">亡くなった子の子（孫）がいる場合はその人数も含める</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="parents">親（存命の人数）</label><input type="number" id="parents" min="0" max="2" value="0"><div class="hint">子どもがいない場合に相続人になります</div></div>
+      <div class="field"><label for="siblings">兄弟姉妹の人数</label><input type="number" id="siblings" min="0" max="10" value="0"><div class="hint">子どもも親もいない場合に相続人になります</div></div>
+    </div>
+    <h2>財産</h2>
+    <div class="row">
+      <div class="field"><label for="land">土地・建物（相続税評価額）</label><input type="number" id="land" min="0" value="4000"><div class="hint">万円単位。土地は路線価、建物は固定資産税評価額が目安</div></div>
+      <div class="field"><label for="cash">預貯金・株式など</label><input type="number" id="cash" min="0" value="3000"><div class="hint">万円単位</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="ins">生命保険金（死亡保険金）</label><input type="number" id="ins" min="0" value="1000"><div class="hint">万円単位。受取人が相続人の場合</div></div>
+      <div class="field"><label for="other">そのほかの財産</label><input type="number" id="other" min="0" value="0"><div class="hint">万円単位。車・貴金属・7年以内の贈与など</div></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="debt">借入金・葬式費用</label><input type="number" id="debt" min="0" value="300"><div class="hint">万円単位（差し引けるもの）</div></div>
+      <div class="field"><label for="shokibo">小規模宅地等の特例による減額</label><input type="number" id="shokibo" min="0" value="0"><div class="hint">万円単位。<a href="/fudosan/shokibo/">特例の計算</a>で出せます</div></div>
+    </div>
+    <div class="field"><label for="sRate">配偶者が相続する割合</label>
+      <select id="sRate"><option value="legal">法定相続分どおり</option><option value="0">相続しない（0%）</option><option value="0.25">25%</option><option value="0.75">75%</option><option value="1">すべて（100%）</option></select></div>
+    <button id="calc">相続税を計算する</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>相続税のよくある質問</h2>
+    <h3>相続税はいくらからかかる？</h3>
+    <p>財産の合計が「3,000万円＋600万円×法定相続人の数」（基礎控除）を超えるとかかります。たとえば、配偶者と子ども2人なら4,800万円までは相続税がかかりません。</p>
+    <h3>配偶者の税額軽減とは？</h3>
+    <p>配偶者が相続した財産は、1億6,000万円か、法定相続分のどちらか多い額までは相続税がかかりません。ただし、この軽減を使うには、税額が0円でも相続税の申告が必要です。</p>
+    <h3>相続税の申告期限は？</h3>
+    <p>亡くなったことを知った日の翌日から10か月以内に、亡くなった人の住所地の税務署に申告・納付します。期限に遅れると加算税や延滞税がかかるので、早めに準備しましょう。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>国税庁の相続税の計算方法（法定相続分で分けたと仮定して相続税の総額を出し、実際に相続する割合で分ける）による概算です。養子・相続放棄・代襲相続・相次相続控除・未成年者控除などは考慮していません。実際の申告は税理士にご相談ください。</footer>
+</div>
+
+<script src="assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+function calc() {
+  const out = $("result");
+  out.hidden = false;
+  const fam = { spouse: $("spouse").value === "1", children: Math.floor(num("children")), parents: Math.floor(num("parents")), siblings: Math.floor(num("siblings")) };
+  const hs = heirs(fam);
+  if (!hs.length) { out.innerHTML = '<p class="err">法定相続人がいない計算になります。家族構成を確認してください。</p>'; return; }
+  const n = hs.length;
+  const base = 30000000 + 6000000 * n;
+  const ins = num("ins") * MAN, insFree = Math.min(ins, 5000000 * n);
+  const total = Math.max(0, (num("land") - num("shokibo") + num("cash") + num("other") - num("debt")) * MAN + ins - insFree);
+  const taxable = floor1000(total - base);
+  // 法定相続分で分けたとして相続税の総額を出す
+  const sum = hs.reduce((s, h) => s + sozokuTax(floor1000(taxable * h.share)), 0);
+  const souzei = floor100(sum);
+  // 実際の取得割合
+  const sp = hs.find(h => h.who === "配偶者");
+  const sRateSel = $("sRate").value;
+  const sRate = sp ? (sRateSel === "legal" ? sp.share : Number(sRateSel)) : 0;
+  const others = hs.filter(h => h !== sp), otherShare = others.reduce((s, h) => s + h.share, 0);
+  const rows = hs.map(h => {
+    const ratio = h === sp ? sRate : otherShare ? (1 - sRate) * h.share / otherShare : 0;
+    let tax = souzei * ratio;
+    if (h.add20) tax *= 1.2;
+    let reduce = 0;
+    if (h === sp && total > 0) reduce = souzei * Math.min(total * ratio, Math.max(160000000, total * h.share)) / total;
+    return { ...h, ratio, get: total * ratio, tax: floor100(Math.max(0, tax - reduce)), reduce };
+  });
+  const pay = rows.reduce((s, r) => s + r.tax, 0);
+
+  out.innerHTML = `
+    <div class="big">
+      <div class="stat ${pay ? "warn" : "good"}"><div class="k">納める相続税の合計</div><div class="v">${pay ? man(pay) : "0円"}</div></div>
+      <div class="stat"><div class="k">基礎控除（${n}人）</div><div class="v">${man(base)}</div></div>
+      <div class="stat"><div class="k">課税の対象になる財産</div><div class="v">${man(total)}</div></div>
+    </div>
+    ${taxable <= 0 ? `<p class="note">財産の合計が基礎控除以下なので、<strong>相続税はかかりません</strong>。${num("shokibo") ? "ただし、小規模宅地等の特例を使ってこの結果になる場合は、相続税の申告が必要です。" : "原則として申告も不要です。"}</p>` : ""}
+    <table class="info">
+      <tr><td>生命保険金の非課税枠（500万円×${n}人）</td><td class="num">${man(insFree)}</td></tr>
+      <tr><td>基礎控除を引いた後の金額（課税遺産総額）</td><td class="num">${man(Math.max(0, taxable))}</td></tr>
+      <tr><td>相続税の総額</td><td class="num">${man(souzei)}</td></tr>
+    </table>
+    ${taxable > 0 ? `<h2 style="margin-top:14px">一人ひとりの税額</h2>
+    <div style="overflow-x:auto"><table class="info"><tr><th>相続人</th><th class="num">法定相続分</th><th class="num">相続する額</th><th class="num">納める税額</th></tr>
+      ${rows.map(r => `<tr><td>${r.who}${r.add20 ? "（2割加算）" : ""}${r.reduce ? "<br><small style=\"color:var(--muted)\">配偶者の税額軽減あり</small>" : ""}</td><td class="num">${frac(r.share)}</td><td class="num">${man(r.get)}</td><td class="num">${r.tax ? man(r.tax) : "0円"}</td></tr>`).join("")}
+    </table></div>` : ""}
+    <p class="note">相続税の申告期限は、亡くなった日の翌日から<strong>10か月以内</strong>です。不動産が多い場合は、評価のしかた（路線価・小規模宅地等の特例）で税額が大きく変わるので、相続に強い税理士に相談するのがおすすめです。</p>
+    <p class="note">相続した不動産を売ることを考えているなら → <a href="/fudosan/baikyaku/">不動産売却 手取り計算</a></p>`;
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("calc").addEventListener("click", calc);
+</script>
+</body>
+</html>

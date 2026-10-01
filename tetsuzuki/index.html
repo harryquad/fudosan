@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>相続手続き やることリスト【期限つき・自動作成】｜7日・14日・3か月・4か月・10か月・3年</title>
+<meta name="description" content="亡くなった日を入れるだけで、相続の手続き（死亡届・年金・健康保険・相続放棄・準確定申告・相続税の申告・相続登記・保険金の請求など）を期限つきのチェックリストで自動作成する無料ツールです。">
+<link rel="canonical" href="https://harryquad.github.io/fudosan/tetsuzuki/">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+.group{margin-top:18px}.group h3{font-size:1rem;margin:0 0 8px}
+.item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.item input{margin-top:5px;width:18px;height:18px;flex:none}.item .body{flex:1}.item .ttl{font-weight:600}
+.item .due{font-size:.85rem;color:var(--warn);font-weight:700}.item .desc{font-size:.88rem;color:var(--muted)}
+.item.done .ttl{text-decoration:line-through;color:var(--muted)}
+.progress{height:8px;background:var(--bg);border-radius:99px;overflow:hidden;margin-top:6px}.progress div{height:100%;background:var(--good);width:0}
+</style>
+</head>
+<body>
+<header class="site-header"><div><a href="/fudosan/">不動産のお金 かんたん計算</a></div></header>
+<div class="wrap">
+  <h1>相続手続き やることリスト</h1>
+  <p class="lead">亡くなった日と状況を選ぶと、相続の手続きを<strong>期限の早い順</strong>に一覧にします。チェックした内容はこのブラウザに保存されます。</p>
+
+  <div class="card">
+    <div class="field"><label for="date">亡くなった日</label><input type="date" id="date"></div>
+    <div class="field"><div class="checks">
+      <label><input type="checkbox" id="estate" checked>不動産（土地・家）がある</label>
+      <label><input type="checkbox" id="business">亡くなった人に事業収入・年金などの収入があった</label>
+      <label><input type="checkbox" id="debt">借金がありそう</label>
+      <label><input type="checkbox" id="ins">生命保険に入っていた</label>
+      <label><input type="checkbox" id="big">財産が多く、相続税がかかりそう</label>
+    </div></div>
+    <button id="make">リストを作る</button>
+  </div>
+
+  <div class="card" id="result" hidden></div>
+
+  <div class="ad">広告スペース</div>
+
+  <div class="card faq">
+    <h2>相続手続きのよくある質問</h2>
+    <h3>いちばん大事な期限は？</h3>
+    <p>借金が多い場合の「相続放棄・限定承認」は3か月以内、相続税の申告・納付は10か月以内です。この2つは過ぎると取り返しがつかないので、早めに財産と借金を調べることが大切です。</p>
+    <h3>相続放棄するとどうなる？</h3>
+    <p>借金だけでなく、預貯金や不動産などのプラスの財産も一切相続しないことになります。家庭裁判所に申し立てる必要があり、亡くなったことを知った日から3か月以内が期限です。</p>
+    <h3>手続きは誰に相談すればいい？</h3>
+    <p>相続税は税理士、登記は司法書士、相続人同士でもめている場合は弁護士が専門です。相続に強い事務所では、まとめて相談できることもあります。</p>
+  </div>
+
+  <div class="card" id="related"></div>
+
+  <footer>一般的な手続きと期限の目安です。手続きの内容は、市区町村・金融機関・加入していた制度によって異なる場合があります。</footer>
+</div>
+
+<script src="../assets/site.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const STORE = "fudosan-tetsuzuki";
+let checked = {};
+try { checked = JSON.parse(localStorage.getItem(STORE) || "{}"); } catch { checked = {}; }
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(checked)); } catch {} };
+const tt = new Date();
+$("date").value = `${tt.getFullYear()}-${String(tt.getMonth() + 1).padStart(2, "0")}-${String(tt.getDate()).padStart(2, "0")}`;
+const WD = ["日", "月", "火", "水", "木", "金", "土"];
+const fmt = d => `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${WD[d.getDay()]}）`;
+
+function build(D) {
+  const plus = (days = 0, months = 0, years = 0) => new Date(D.getFullYear() + years, D.getMonth() + months, D.getDate() + days);
+  const g = [];
+  g.push({ h: "すぐ〜14日以内", items: [
+    { id: "shibou", t: "死亡届を出す（火葬許可の申請）", due: fmt(plus(6)), d: "亡くなったことを知った日から7日以内。葬儀会社が代行してくれることが多いです。" },
+    { id: "nenkin", t: "年金の受給を止める", due: fmt(plus(13)), d: "年金を受け取っていた場合。国民年金は14日以内、厚生年金は10日以内（マイナンバーが登録されていれば省略できる場合あり）。" },
+    { id: "kenpo", t: "健康保険の資格喪失・介護保険の手続き", due: fmt(plus(13)), d: "国民健康保険・後期高齢者医療・介護保険の保険証を市区町村に返します。" },
+    { id: "setainushi", t: "世帯主の変更届", due: fmt(plus(13)), d: "亡くなった人が世帯主で、残った世帯員が2人以上の場合。" },
+  ]});
+  const m3 = [
+    { id: "yuigon", t: "遺言書があるか確認する", due: "できるだけ早く", d: "自筆の遺言書は家庭裁判所の検認が必要です（法務局で保管されていた場合は不要）。" },
+    { id: "zaisan", t: "財産と借金を調べる（預貯金・不動産・株・借入）", due: "できるだけ早く", d: "相続放棄するかどうかを決めるために必要です。" },
+  ];
+  if ($("debt").checked) m3.push({ id: "houki", t: "相続放棄・限定承認をするか決める", due: fmt(plus(0, 3)), d: "亡くなったことを知った日から3か月以内に家庭裁判所へ。過ぎると原則として借金も相続します。" });
+  g.push({ h: "3か月以内", items: m3 });
+  if ($("business").checked) g.push({ h: "4か月以内", items: [{ id: "junkakutei", t: "準確定申告（亡くなった人の所得税の申告）", due: fmt(plus(0, 4)), d: "亡くなった年の1月1日から亡くなった日までの所得を、相続人が申告します。" }] });
+  const m10 = [{ id: "bunkatsu", t: "遺産分割協議（誰が何を相続するか話し合う）", due: $("big").checked ? `${fmt(plus(0, 10))}までに` : "早めに", d: "相続人全員で合意したら、遺産分割協議書を作って全員が署名・実印を押します。" }];
+  if ($("big").checked) m10.push({ id: "souzokuzei", t: "相続税の申告・納付", due: fmt(plus(0, 10)), d: "亡くなったことを知った日の翌日から10か月以内。小規模宅地等の特例や配偶者の税額軽減を使う場合も申告が必要です。" });
+  g.push({ h: "10か月以内", items: m10 });
+  const later = [];
+  if ($("estate").checked) later.push({ id: "touki", t: "相続登記（不動産の名義変更）", due: fmt(plus(0, 0, 3)), d: "相続を知った日から3年以内に義務化。正当な理由なく遅れると10万円以下の過料の対象です。" });
+  if ($("ins").checked) later.push({ id: "hoken", t: "生命保険金を請求する", due: fmt(plus(0, 0, 3)), d: "多くの保険会社では3年で時効になります。受取人が請求します。" });
+  later.push({ id: "izoku", t: "遺族年金を請求する", due: fmt(plus(0, 0, 5)), d: "受け取れる人がいる場合。5年を過ぎると、さかのぼって受け取れない分が出ます。" });
+  later.push({ id: "sousai", t: "葬祭費・埋葬料を請求する", due: fmt(plus(0, 0, 2)), d: "国民健康保険・後期高齢者医療は葬祭費、会社の健康保険は埋葬料。2年で時効。" });
+  later.push({ id: "meigi", t: "預貯金・株・車・公共料金などの名義変更・解約", due: "遺産分割がまとまったら", d: "" });
+  g.push({ h: "そのあとの手続き", items: later });
+  return g;
+}
+
+function render() {
+  const out = $("result");
+  out.hidden = false;
+  const v = $("date").value;
+  if (!v) { out.innerHTML = '<p class="err">亡くなった日を入力してください。</p>'; return; }
+  const [y, m, d] = v.split("-").map(Number);
+  const groups = build(new Date(y, m - 1, d));
+  const all = groups.flatMap(x => x.items);
+  out.innerHTML = `<h2>相続手続きのリスト（全${all.length}件）</h2><div class="hint" id="count"></div><div class="progress"><div id="bar"></div></div>
+    ${groups.map(x => `<div class="group"><h3>${x.h}</h3>${x.items.map(i => `<label class="item ${checked[i.id] ? "done" : ""}" data-id="${i.id}"><input type="checkbox" ${checked[i.id] ? "checked" : ""}><div class="body"><div class="ttl">${i.t}</div><div class="due">期限：${i.due}</div>${i.d ? `<div class="desc">${i.d}</div>` : ""}</div></label>`).join("")}</div>`).join("")}
+    <p class="note">チェックの状態はこのブラウザに保存されます。相続した家を使わないなら、売るか貸すかも早めに検討しましょう → <a href="/fudosan/urukasu/">実家 売る・貸す・持ち続ける 比較</a></p>`;
+  const update = () => { const done = all.filter(i => checked[i.id]).length; $("count").textContent = `${done} / ${all.length} 件 完了`; $("bar").style.width = `${done / all.length * 100}%`; };
+  out.querySelectorAll(".item input").forEach(cb => cb.addEventListener("change", () => { const it = cb.closest(".item"); checked[it.dataset.id] = cb.checked; it.classList.toggle("done", cb.checked); save(); update(); }));
+  update();
+  out.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+$("make").addEventListener("click", render);
+</script>
+</body>
+</html>
